@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  analyzer:
+    build: .
+    container_name: packet_analyzer
+    volumes:
+      - ./pcap_files:/app/pcap_files  # Mount the directory containing pcap files
+    networks:
+      - test_net
+    command: python main.py
+    tty: true
+
+  replayer:
+    image: ubuntu:20.04  # Use an Ubuntu image with tcpreplay
+    container_name: packet_replayer
+    networks:
+      - test_net
+    volumes:
+      - ./pcap_files:/pcap_files  # Mount the directory containing pcap files
+    command: >
+      bash -c "apt-get update &&
+               apt-get install -y tcpreplay &&
+               tcpreplay --intf1=eth0 /pcap_files/sample.pcap"
+    tty: true
+
+networks:
+  test_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.0.0.0/24
